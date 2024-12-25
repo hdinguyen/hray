@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter
 from llm.agent.amk_agent import AmkAgent
 from pydantic import BaseModel
@@ -16,4 +18,4 @@ def health_check():
 @router.post("/event")
 def read_root(event: EventInput):
     print(event)
-    return AmkAgent().call(msg=event.message, context=f"today is 2024-12-25T09:49:00+08:00 and the existing events are {event.existing_events}")
+    return AmkAgent().call(msg=event.message, context=f"today is {datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S %Z')} and the existing events are {event.existing_events}")
