@@ -6,7 +6,7 @@ from llm.signature.amk_signature import AmkSignature
 
 load_dotenv()
 
-llm =LM("groq/llama3-8b-8192", api_key=f"{os.getenv("GROQ_API_KEY")}")
+llm =LM(f"{os.getenv("GROQ_MODEL")}", api_key=f"{os.getenv("GROQ_API_KEY")}")
 
 class AmkAgent():
     _instance = None
@@ -24,6 +24,4 @@ class AmkAgent():
 
     def call(self, msg: str, context: str):
         configure(lm=llm)
-        print(context)
-        print(msg)
         return self.parser(msg=msg, context=context)

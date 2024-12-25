@@ -5,11 +5,17 @@ from pydantic import BaseModel
 
 
 class AMKEvent(BaseModel):
+    '''
+    event_start_dt: start time of the event
+    event_finish_dt: end time of the event
+    event_location: location of the event
+    joiners: list of joiners
+    conflict: if the event is in conflict with existing events
+    '''
     event_start_dt: datetime
     event_finish_dt: datetime
     event_location: str
     joiners: str
-    origin: str
     conflict: bool
 
 class AmkSignature(Signature):
