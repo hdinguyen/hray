@@ -1,0 +1,19 @@
+{
+    "python.defaultInterpreterPath": "/Users/nguyenh/Library/Caches/pypoetry/virtualenvs/hray-w-TuVsKH-py3.12/bin/python",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.rulers": [
+        88
+    ],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    "python.envFile": "${workspaceFolder}/.env"
+}
