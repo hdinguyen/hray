@@ -6,7 +6,7 @@ from llm.signature.amk_signature import AmkSignature
 
 load_dotenv()
 
-llm =LM(f"{os.getenv("GROQ_MODEL")}", api_key=f"{os.getenv("GROQ_API_KEY")}")
+llm = LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
 
 class AmkAgent():
     _instance = None
@@ -18,10 +18,11 @@ class AmkAgent():
         return cls._instance
 
     def __init__(self):
-        if not hasattr(self, 'parser'):  # Only initialize if not already done
+        if not hasattr(self, 'parser'):
             super().__init__()
             self.parser = ChainOfThought(AmkSignature)
 
     def call(self, msg: str, context: str):
         configure(lm=llm)
-        return self.parser(msg=msg, context=context)
+        result = self.parser(msg=msg, context=context)
+        return result

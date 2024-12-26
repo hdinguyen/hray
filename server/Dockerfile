@@ -11,12 +11,12 @@ RUN apt-get update && apt-get install -y curl
 RUN curl -sSL https://install.python-poetry.org | python3 - \
     && ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
-# Copy Poetry configuration files
-COPY poetry.lock pyproject.toml ./
+# Copy only pyproject.toml first (not poetry.lock)
+COPY pyproject.toml .
 
-# Install dependencies (runtime only)
+# Configure poetry and install dependencies
 RUN poetry config virtualenvs.create false \
-    && poetry install --only main
+    && poetry install --no-interaction --no-cache
 
 # Copy the entire project
 COPY ./app /app

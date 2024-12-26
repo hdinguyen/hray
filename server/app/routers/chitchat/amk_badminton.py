@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/llm")
 
-
 class EventInput(BaseModel):
     message: str
     existing_events: list[dict[str, str]]
