@@ -16,5 +16,4 @@ def health_check():
 
 @router.post("/event")
 def read_root(event: EventInput):
-    print(event)
     return AmkAgent().call(msg=event.message, context=f"today is {datetime.now().astimezone().strftime('%Y-%m-%d %H:%M:%S %Z')} and the existing events are {event.existing_events}")
