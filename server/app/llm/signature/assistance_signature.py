@@ -12,6 +12,6 @@ class AssistanceQueryPurpose(Signature):
 class ExtractContent(Signature):
     original_content: str = InputField(desc="The original content to extract information from")
     query:str = InputField(desc="The query context for determining relevance")
-    cleaned_response: SummarizedContent = OutputField(
+    cleaned_response: Union[SummarizedContent, None] = OutputField(
         desc='the cleaned and summarized result, `None` if no relevant content'
     )
