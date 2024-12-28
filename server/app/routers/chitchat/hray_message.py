@@ -1,9 +1,10 @@
-from llm.agent.tool_rag import SearchReact
+from llm.pipeline.quick_reply import QuickReplyPipeline
 
 from . import router
 
 
 @router.get("/quick_reply")
 def quick_reply(msg: str):
-    search_react = SearchReact()
-    return search_react(msg)
+    quick_reply = QuickReplyPipeline()
+
+    return quick_reply(msg)

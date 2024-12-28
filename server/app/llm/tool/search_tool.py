@@ -74,49 +74,5 @@ class BraveSearch:
 
         return results
 
-    # async def search(self, query: str) -> List[SearchResult]:
-    #     """
-    #     Perform an asynchronous search query using Brave Search API.
-
-    #     Args:
-    #         query: The search query string
-
-    #     Returns:
-    #         List of SearchResult objects containing the search results
-    #     """
-    #     headers = {
-    #         "Accept": "application/json",
-    #         "X-Subscription-Token": self.api_key
-    #     }
-
-    #     params = {
-    #         "q": query,
-    #         "count": self.num_results
-    #     }
-
-    #     async with aiohttp.ClientSession() as session:
-    #         async with session.get(
-    #             self.base_url,
-    #             headers=headers,
-    #             params=params
-    #         ) as response:
-    #             if response.status != 200:
-    #                 error_text = await response.text()
-    #                 raise Exception(f"Brave Search API error: {error_text}")
-
-    #             data = await response.json()
-
-    #             results = []
-    #             for web_result in data.get("web", {}).get("results", []):
-    #                 result = SearchResult(
-    #                     title=web_result.get("title", ""),
-    #                     content=web_result.get("description", ""),
-    #                     source_url=web_result.get("url", ""),
-    #                     snippet=web_result.get("description", "")
-    #                 )
-    #                 results.append(result)
-
-    #             return results
-
 # Create a default instance
 brave_search = BraveSearch()
