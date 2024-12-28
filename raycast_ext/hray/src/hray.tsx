@@ -11,11 +11,17 @@ interface Preferences {
   apiKey?: string;
 }
 
-function makeRequest(endpoint: string, method: string = "GET", body?: any) {
+interface RequestBody {
+  helpful?: boolean | null;
+  question?: string;
+  response?: string;
+}
+
+function makeRequest(endpoint: string, method: string = "GET", body?: RequestBody) {
   const { host, apiKey } = getPreferenceValues<Preferences>();
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'X-API-Key': apiKey || 'M3rryChr!stm@s',
+    "Content-Type": "application/json",
+    "X-API-Key": apiKey || "M3rryChr!stm@s",
   };
 
   return fetch(`${host}${endpoint}`, {
@@ -35,7 +41,7 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
       try {
         const response = await makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
         const result = await response.text();
-        const formattedResult = result.replace(/^"|"$/g, '').replace(/\\n/g, '\n');
+        const formattedResult = result.replace(/^"|"$/g, "").replace(/\\n/g, "\n");
         console.log(result);
         console.log(formattedResult);
         setData(formattedResult);
@@ -56,14 +62,14 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
           <Action
             title="👍 Helpful"
             onAction={async () => {
-              await makeRequest('/llm/feedback', "POST", { helpful: true, question, response: data });
+              await makeRequest("/llm/feedback", "POST", { helpful: true, question, response: data });
               await showToast({ title: "Noted to learn" });
             }}
           />
           <Action
             title="👎 Not Helpful"
             onAction={async () => {
-              await makeRequest('/llm/feedback', "POST", { helpful: false, question, response: data });
+              await makeRequest("/llm/feedback", "POST", { helpful: false, question, response: data });
               await showToast({ title: "Noted to learn" });
             }}
           />
@@ -71,7 +77,7 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
             title="Close Without Feedback"
             url="raycast://pop"
             onOpen={() => {
-              makeRequest('/llm/feedback', "POST", { helpful: null, question, response: data });
+              makeRequest("/llm/feedback", "POST", { helpful: null, question, response: data });
             }}
           />
           <Action.OpenInBrowser

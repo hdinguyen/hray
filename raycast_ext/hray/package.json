@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "hray",
-  "title": "hray",
-  "description": "My ext tool on raycast",
+  "title": "Hey Ray",
+  "description": "My ext tool on raycast to interact with the hray server",
   "icon": "extension-icon.png",
   "author": "nguyenh",
   "owner": "nguyenhd",
@@ -13,7 +13,7 @@
   "commands": [
     {
       "name": "hray",
-      "title": "hray",
+      "title": "Hray",
       "subtitle": "heyray",
       "description": "wake the hray and sent to the server",
       "mode": "view",
@@ -45,7 +45,6 @@
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
-    "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
     "publish": "npx @raycast/api@latest publish"
   },
   "preferences": [

@@ -18,7 +18,7 @@ class Feedback(Base):
     ignore = Column(Boolean, nullable=False, default=False)
 
 def get_db():
-    DATABASE_URL = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'root')}@{os.getenv('POSTGRES_HOST', 'localhost')}/{os.getenv('POSTGRES_DB', 'hray')}"
+    DATABASE_URL = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'root')}@{os.getenv('POSTGRES_HOST', 'postgres')}/{os.getenv('POSTGRES_DB', 'hray')}"
     engine = create_engine(DATABASE_URL)
     SessionLocal = sessionmaker(bind=engine)
     return SessionLocal()

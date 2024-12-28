@@ -7,6 +7,7 @@ services:
       - app/.env
     environment:
       - GROQ_API_KEY
+      - GROQ_MODEL
       - JAEGER_HOST=jaeger
       - PHOENIX_HOST=phoenix
     depends_on:
@@ -37,3 +38,22 @@ services:
       - PHOENIX_TRACE_ENABLED=true         # Enable tracing
     depends_on:
       - jaeger
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=hray
+      - POSTGRES_USER=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount the init script
+    command: ["postgres"]  # Simplified command as initialization is handled by docker-entrypoint-initdb.d
+    depends_on:
+      - jaeger
+
+volumes:
+  postgres_data:
+    driver: local
