@@ -4,6 +4,7 @@ import dspy
 from dotenv import load_dotenv
 from logger.log import logger
 
+
 load_dotenv()
 class ToolChoice(dspy.Signature):
    """Determines which tool would be most appropriate to handle the user's request"""
@@ -52,9 +53,36 @@ class ToolRetriever(dspy.Module):
         if tool_choice.selected_tools == "irrelevant_content":
             return self.irrelevant_content()
         else:
+            # Get the selected tool method
+            tool_method = getattr(self, tool_choice.selected_tools, None)
+            if tool_method is None:
+                logger.error(f"Tool {tool_choice.selected_tools} not found")
+                return self.irrelevant_content()
+
+            # Call the selected tool and add result to context
+            try:
+                tool_result = tool_method()
+                context.append(tool_result)
+            except Exception as e:
+                logger.error(f"Error executing tool {tool_choice.selected_tools}: {str(e)}")
+                return self.irrelevant_content()
             logger.info(f"Using tool: {tool_choice.selected_tools}")
             return self.generate_answer(
                 purpose="To provide helpful information to the user's question",
                 context=context,
                 question=question
             )
+
+from llm.tool.search_tool import SearchResult
+
+
+class SearchReact(dspy.Module):
+    def __init__(self, lm = None):
+        if lm is None:
+            lm = dspy.LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
+        self.lm = lm
+        self.react = dspy.ReAct("question -> answer", tools=[SearchResult])
+
+    def __call__(self, query: str):
+        self.set_lm(self.lm)
+        return self.react(question=query)

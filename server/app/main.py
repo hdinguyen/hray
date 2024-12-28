@@ -5,8 +5,13 @@ import uvicorn
 from fastapi import FastAPI
 from logger import get_logger, initialize_tracer, instrument
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from phoenix.otel import register
 from routers.chitchat.amk_badminton import router as amk_badminton_router
 
+tracer_provider = register(
+  project_name="my-llm-app", # Default is 'default'
+  endpoint="http://localhost:6006/v1/traces",
+)
 # Create logger instance for this module
 logger = get_logger(__name__)
 
