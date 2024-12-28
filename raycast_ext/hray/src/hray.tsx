@@ -1,4 +1,4 @@
-import { ActionPanel, Detail, LaunchProps, Action, getPreferenceValues } from "@raycast/api";
+import { ActionPanel, Detail, LaunchProps, Action, getPreferenceValues, showToast } from "@raycast/api";
 import { useState, useEffect } from "react";
 import fetch, { HeadersInit } from "node-fetch";
 
@@ -55,14 +55,16 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
         <ActionPanel>
           <Action
             title="👍 Helpful"
-            onAction={() => {
-              makeRequest('/llm/feedback', "POST", { helpful: true, question, response: data });
+            onAction={async () => {
+              await makeRequest('/llm/feedback', "POST", { helpful: true, question, response: data });
+              await showToast({ title: "Noted to learn" });
             }}
           />
           <Action
             title="👎 Not Helpful"
-            onAction={() => {
-              makeRequest('/llm/feedback', "POST", { helpful: false, question, response: data });
+            onAction={async () => {
+              await makeRequest('/llm/feedback', "POST", { helpful: false, question, response: data });
+              await showToast({ title: "Noted to learn" });
             }}
           />
           <Action.OpenInBrowser
