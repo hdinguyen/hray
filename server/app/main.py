@@ -3,24 +3,21 @@ import json
 
 import uvicorn
 from fastapi import FastAPI
-from logger import get_logger, initialize_tracer, instrument
+from logger import get_logger, initialize_tracer, setup_tracer
+from logger.unified_tracer import initialize_tracer
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from phoenix.otel import register
-from routers.chitchat.amk_badminton import router as amk_badminton_router
+from routers.chitchat import router as chat_router
 
-tracer_provider = register(
-  project_name="my-llm-app", # Default is 'default'
-  endpoint="http://localhost:6006/v1/traces",
-)
 # Create logger instance for this module
 logger = get_logger(__name__)
 
-# Initialize tracer
-try:
-    initialize_tracer()
-    #instrument()
-except Exception as e:
-    logger.error(f"Failed to initialize tracer: {e}", exc_info=True)
+# Initialize the unified tracer at application startup
+initialize_tracer(
+    service_name="hray-service",
+    environment="development",
+    jaeger_endpoint="http://localhost:4318/v1/traces",
+    phoenix_endpoint="http://127.0.0.1:6006/v1/traces"
+)
 
 # Create FastAPI app and instrument it
 app = FastAPI()
@@ -30,7 +27,7 @@ FastAPIInstrumentor.instrument_app(app)
 @app.get("/test-trace")
 async def test_trace():
     try:
-        from logger.tracer import get_tracer
+        from app.logger.jaeger_tracer import get_tracer
         tracer = get_tracer(__name__)
         with tracer.start_as_current_span("test-operation") as span:
             # Add multiple attributes for better visibility
@@ -60,7 +57,7 @@ async def test_trace():
 async def health_check():
     return {"status": "healthy", "timestamp": str(datetime.datetime.now())}
 
-app.include_router(amk_badminton_router)
+app.include_router(chat_router)
 
 logger.info("FastAPI instrumentation completed")
 

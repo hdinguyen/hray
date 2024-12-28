@@ -883,6 +883,20 @@ snowflake = ["snowflake-snowpark-python"]
 weaviate = ["weaviate-client (>=4.6.5,<4.7.0)"]
 
 [[package]]
+name = "dspy-ai"
+version = "2.5.43"
+description = "DSPy"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "dspy-ai-2.5.43.tar.gz", hash = "sha256:873026e148baac0055c2acd8fef16e8503bbc77f713ca9549f4580f95b3c1e5a"},
+    {file = "dspy_ai-2.5.43-py3-none-any.whl", hash = "sha256:b1209baf24816a425c23173af036667792f343fe6c95973f524d3b425fb66498"},
+]
+
+[package.dependencies]
+dspy = ">=2.5.3"
+
+[[package]]
 name = "email-validator"
 version = "2.2.0"
 description = "A robust email address syntax and deliverability validation library."
@@ -4772,4 +4786,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "de2d7a9a413b7c2e3d0ce01745c8dcc0afe13e820600784ba2652994b3da0aca"
+content-hash = "c6a5d51ec358c6181c2f1c328bbb16182a9424b7192bb1c99ac25ff9c1a8a923"

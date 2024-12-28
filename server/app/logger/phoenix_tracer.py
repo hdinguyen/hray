@@ -1,58 +1,30 @@
-# from openinference.instrumentation.dspy import DSPyInstrumentor
-# from opentelemetry import trace
-# from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import \
-#     OTLPSpanExporter
-# from opentelemetry.sdk.resources import Resource
-# from opentelemetry.sdk.trace import TracerProvider
-# from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-
-# def init_phoenix_tracer():
-#     # Create a TracerProvider
-#     resource = Resource.create({"service.name": "your-service-name"})
-#     trace_provider = TracerProvider(resource=resource)
-
-#     # Configure the OTLP exporter to send traces to Phoenix
-#     otlp_exporter = OTLPSpanExporter(
-#         endpoint="http://localhost:4317",  # Phoenix OTLP endpoint
-#         insecure=True
-#     )
-
-#     # Add BatchSpanProcessor with OTLP exporter
-#     trace_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
-
-#     # Set the TracerProvider
-#     trace.set_tracer_provider(trace_provider)
-
-#     # Initialize DSPy instrumentation
-#     DSPyInstrumentor().instrument()
-
-#     return trace.get_tracer(__name__)
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
+from llm.tool.search_tool import SearchResult
 from openinference.instrumentation.dspy import DSPyInstrumentor
-from openinference.instrumentation.litellm import LiteLLMInstrumentor
+from opentelemetry import trace as trace_api
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
+    OTLPSpanExporter
+from opentelemetry.sdk import trace as trace_sdk
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from phoenix.otel import register
 
-collector_endpoint = os.getenv("COLLECTOR_ENDPOINT", "localhost")
 
-
-def instrument():
-    # resource = Resource(attributes={})
-    # tracer_provider = trace_sdk.TracerProvider(resource=resource)
-    # span_exporter = OTLPSpanExporter(endpoint=collector_endpoint)
-    # span_processor = SimpleSpanProcessor(span_exporter=span_exporter)
-    # tracer_provider.add_span_processor(span_processor=span_processor)
-    # trace_api.set_tracer_provider(tracer_provider=tracer_provider)
-    # DSPyInstrumentor().instrument()
-    from phoenix.otel import register
-
+def setup_tracer():
     tracer_provider = register(
-        project_name="hray-dspy", # Default is 'default'
-        endpoint="http://localhost:6006/v1/traces",
+        project_name="my-llm-app", # Default is 'default'
+        endpoint="http://127.0.0.1:6006/v1/traces",
     )
-    DSPyInstrumentor().instrument(tracer_provider=tracer_provider)
-    LiteLLMInstrumentor().instrument(tracer_provider=tracer_provider)
+
+    resource = Resource.create({
+                    "service.name": "hray_llm",
+                    "deployment.environment": "development"
+                })
+
+
+    endpoint = "http://127.0.0.1:6006/v1/traces"
+    tracer_provider = trace_sdk.TracerProvider(resource=resource)
+    trace_api.set_tracer_provider(tracer_provider)
+    tracer_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter(endpoint)))
+
+    DSPyInstrumentor().instrument()

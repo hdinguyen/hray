@@ -2,8 +2,10 @@ import os
 
 import dspy
 from dotenv import load_dotenv
+from llm.tool.search_tool import brave_search
 from logger.log import logger
 
+dspy.settings.experimental = True
 
 load_dotenv()
 class ToolChoice(dspy.Signature):
@@ -73,15 +75,12 @@ class ToolRetriever(dspy.Module):
                 question=question
             )
 
-from llm.tool.search_tool import SearchResult
-
-
 class SearchReact(dspy.Module):
     def __init__(self, lm = None):
         if lm is None:
             lm = dspy.LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
         self.lm = lm
-        self.react = dspy.ReAct("question -> answer", tools=[SearchResult])
+        self.react = dspy.ReAct("question -> answer", tools=[brave_search])
 
     def __call__(self, query: str):
         self.set_lm(self.lm)

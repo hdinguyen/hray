@@ -88,7 +88,7 @@ def get_tracer(name: str) -> trace.Tracer:
     return trace.get_tracer(name)
 
 # Create default tracer configuration
-default_tracer_config = TracerConfig(service_name="amk-badminton-service")
+default_tracer_config = TracerConfig(service_name="hray-service")
 
 def initialize_tracer(
     service_name: Optional[str] = None,
