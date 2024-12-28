@@ -31,12 +31,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         api_key = request.headers.get("X-API-Key")
         expected_api_key = os.getenv("EXPECTED_API_KEY", "M3rryChr!stm@s")
 
-        # Debug logging
-        logger.debug(f"Received API Key: {api_key}")
-        logger.debug(f"Expected API Key: {expected_api_key}")
-
         if api_key != expected_api_key:
-            logger.warning("Invalid API Key")
+            logger.info(f"Invalid API Key: {api_key}")
             return JSONResponse(
                 status_code=403,
                 content={"detail": "Could not validate credentials"},

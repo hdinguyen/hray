@@ -27,6 +27,8 @@ openinference-instrumentation-litellm = "^0.1.0"
 openai = ">=1.55.3"
 mcp = "^1.1.2"
 dspy-ai = "^2.5.43"
+sqlalchemy = "^2.0.36"
+psycopg2-binary = "^2.9.10"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,6 +1,6 @@
 import { ActionPanel, Detail, LaunchProps, Action, getPreferenceValues } from "@raycast/api";
 import { useState, useEffect } from "react";
-import fetch from "node-fetch";
+import fetch, { HeadersInit } from "node-fetch";
 
 interface CommandArguments {
   question: string;
@@ -11,26 +11,29 @@ interface Preferences {
   apiKey?: string;
 }
 
+function makeRequest(endpoint: string, method: string = "GET", body?: any) {
+  const { host, apiKey } = getPreferenceValues<Preferences>();
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'X-API-Key': apiKey || 'M3rryChr!stm@s',
+  };
+
+  return fetch(`${host}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
 export default function Command(props: LaunchProps<{ arguments: CommandArguments }>) {
   const { question } = props.arguments;
-  const { host, apiKey } = getPreferenceValues<Preferences>();
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState("");
-
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json'
-  };
-  
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`;
-  }
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`${host}/llm/quick_reply?msg=${encodeURIComponent(question)}`, {
-          headers
-        });
+        const response = await makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
         const result = await response.text();
         const formattedResult = result.replace(/^"|"$/g, '').replace(/\\n/g, '\n');
         console.log(result);
@@ -41,8 +44,8 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
       }
     }
     fetchData();
-  }, [question, host]);
-  
+  }, [question]);
+
   return (
     <Detail
       markdown={data}
@@ -53,40 +56,27 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
           <Action
             title="👍 Helpful"
             onAction={() => {
-              // Send feedback that response was helpful
-              fetch(`${host}/llm/feedback`, {
-                method: "POST",
-                body: JSON.stringify({ helpful: true, question, response: data })
-              });
+              makeRequest('/llm/feedback', "POST", { helpful: true, question, response: data });
             }}
           />
           <Action
-            title="👎 Not Helpful" 
+            title="👎 Not Helpful"
             onAction={() => {
-              // Send feedback that response was not helpful
-              fetch(`${host}/llm/feedback`, {
-                method: "POST",
-                body: JSON.stringify({ helpful: false, question, response: data })
-              });
+              makeRequest('/llm/feedback', "POST", { helpful: false, question, response: data });
             }}
           />
           <Action.OpenInBrowser
             title="Close Without Feedback"
             url="raycast://pop"
             onOpen={() => {
-              // User closed without giving feedback
-              fetch(`${host}/llm/feedback`, {
-                method: "POST", 
-                body: JSON.stringify({ helpful: null, question, response: data })
-              });
+              makeRequest('/llm/feedback', "POST", { helpful: null, question, response: data });
             }}
           />
           <Action.OpenInBrowser
             title="Edit Question"
             url="raycast://pop"
             onOpen={() => {
-              // Reopen with edited question
-              fetch(`${host}/llm/quick_reply?msg=${encodeURIComponent(question)}`);
+              makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
             }}
           />
         </ActionPanel>
