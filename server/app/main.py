@@ -4,11 +4,14 @@ import os
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware import Middleware
+from fastapi.responses import JSONResponse
 from logger import get_logger
 from logger.unified_tracer import initialize_tracer
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from routers.chitchat import router as chat_router
+from starlette.middleware.base import BaseHTTPMiddleware
 
 load_dotenv()
 # Create logger instance for this module
@@ -22,8 +25,35 @@ initialize_tracer(
     phoenix_endpoint=f"http://{os.getenv('PHOENIX_HOST', '127.0.0.1')}:6006/v1/traces"
 )
 
+# Middleware to verify API key
+class APIKeyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        api_key = request.headers.get("X-API-Key")
+        expected_api_key = os.getenv("EXPECTED_API_KEY", "M3rryChr!stm@s")
+
+        # Debug logging
+        logger.debug(f"Received API Key: {api_key}")
+        logger.debug(f"Expected API Key: {expected_api_key}")
+
+        if api_key != expected_api_key:
+            logger.warning("Invalid API Key")
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Could not validate credentials"},
+            )
+
+        try:
+            response = await call_next(request)
+            return response
+        except Exception as e:
+            logger.error(f"Unhandled exception: {e}", exc_info=True)
+            return JSONResponse(
+                status_code=403,
+                content={"detail": f"Unhandled exception: {str(e)}"},
+            )
+
 # Create FastAPI app and instrument it
-app = FastAPI()
+app = FastAPI(middleware=[Middleware(APIKeyMiddleware)])
 FastAPIInstrumentor.instrument_app(app)
 
 # Add a more comprehensive test endpoint
