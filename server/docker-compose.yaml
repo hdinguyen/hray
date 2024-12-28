@@ -7,6 +7,8 @@ services:
       - app/.env
     environment:
       - GROQ_API_KEY
+      - JAEGER_HOST=jaeger
+      - PHOENIX_HOST=phoenix
     depends_on:
       - phoenix
 
@@ -15,19 +17,19 @@ services:
     ports:
       # OTLP gRPC and HTTP ports
       # - "4317:4317"   # OTLP gRPC (primary protocol for OTLPSpanExporter)
-      - "4318:4318"   # OTLP HTTP
+      #- "4318:4318"   # OTLP HTTP
 
       - "16686:16686" # UI
-      - "14250:14250" # Model.proto
-      - "14268:14268" # Jaeger HTTP
-      - "14269:14269" # Admin port
+      #- "14250:14250" # Model.proto
+      #- "14268:14268" # Jaeger HTTP
+      #- "14269:14269" # Admin port
     environment:
       - COLLECTOR_OTLP_ENABLED=true
 
   phoenix:
     image: arizephoenix/phoenix:latest
     ports:
-      - "4317:4317"
+      #- "4317:4317"
       - "6006:6006"    # Phoenix UI
     environment:
       - PHOENIX_AUTH_ENABLED=false  # Disable auth for local development

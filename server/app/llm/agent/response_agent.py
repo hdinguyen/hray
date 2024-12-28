@@ -11,7 +11,7 @@ load_dotenv()
 
 class ResponseSignature(Signature):
     input: str = InputField(description="The input from other modules")
-    response: str = OutputField(description="The response in markdown format")
+    response: str = OutputField(description="The response in markdown format with replace \n with new line in markdown format")
 
 class ResponseAgent(dspy.Module):
     def __init__(self, lm = None):

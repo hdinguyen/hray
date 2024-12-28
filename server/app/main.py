@@ -1,13 +1,16 @@
 import datetime
 import json
+import os
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
-from logger import get_logger, initialize_tracer, setup_tracer
+from logger import get_logger
 from logger.unified_tracer import initialize_tracer
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from routers.chitchat import router as chat_router
 
+load_dotenv()
 # Create logger instance for this module
 logger = get_logger(__name__)
 
@@ -15,8 +18,8 @@ logger = get_logger(__name__)
 initialize_tracer(
     service_name="hray-service",
     environment="development",
-    jaeger_endpoint="http://localhost:4318/v1/traces",
-    phoenix_endpoint="http://127.0.0.1:6006/v1/traces"
+    jaeger_endpoint=f"http://{os.getenv('JAEGER_HOST', '127.0.0.1')}:4318/v1/traces",
+    phoenix_endpoint=f"http://{os.getenv('PHOENIX_HOST', '127.0.0.1')}:6006/v1/traces"
 )
 
 # Create FastAPI app and instrument it
