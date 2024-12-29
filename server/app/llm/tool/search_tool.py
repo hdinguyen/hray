@@ -76,3 +76,12 @@ class BraveSearch:
 
 # Create a default instance
 brave_search = BraveSearch()
+
+
+from dspy import Tool
+
+brave_search_tool = Tool(
+    name="brave_search",
+    desc="Search the web for information",
+    func=BraveSearch()
+)

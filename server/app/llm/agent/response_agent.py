@@ -10,18 +10,24 @@ dspy.settings.experimental = True
 load_dotenv()
 
 class ResponseSignature(Signature):
-    input: str = InputField(description="The input from other modules")
-    language: str = InputField(description="The language of the input use to response in the same language as the input, if the input is not asking for translate then the language is the same as the input")
+    question: str = InputField(description="The question from user")
+    information: str = InputField(description="The extra information from other modules")
+    language: str = InputField(description="Language must use for the response in ISO 639-1 format")
     response: str = OutputField(description="The response in markdown format with replace \n with new line in markdown format")
+
+class LanguageSignature(Signature):
+    question: str = InputField(description="Original question from user")
+    language: str = OutputField(description="The language must be used for answer in ISO 639-1 format")
 
 class ResponseAgent(dspy.Module):
     def __init__(self, lm = None):
         if lm is None:
             lm = dspy.LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
         self.lm = lm
+        self.cot = dspy.ChainOfThought(LanguageSignature)
         self.responder = dspy.ChainOfThought(ResponseSignature)
 
-    def __call__(self, query: str, language: str) -> str:
+    def __call__(self, question: str, reality_information: str) -> str:
         """
         Format the response as markdown.
 
@@ -34,5 +40,7 @@ class ResponseAgent(dspy.Module):
             Markdown formatted response string
         """
         self.set_lm(self.lm)
-        result = self.responder(input=query, language=language)
+        language = self.cot(question=question)
+
+        result = self.responder(question=question, information=reality_information, language=language)
         return result.response
