@@ -1,7 +1,7 @@
 import dspy
 from langdetect import detect
 from llm.agent.response_agent import ResponseAgent
-from llm.agent.search_rag import SearchReact
+from llm.agent.search_agent import SearchReact
 from logger.log import get_logger
 
 logger = get_logger(__name__)
