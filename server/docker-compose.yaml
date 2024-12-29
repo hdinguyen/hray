@@ -12,48 +12,31 @@ services:
       - PHOENIX_HOST=phoenix
     depends_on:
       - phoenix
+    networks:
+      - my_bridge_network
 
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
-      # OTLP gRPC and HTTP ports
-      # - "4317:4317"   # OTLP gRPC (primary protocol for OTLPSpanExporter)
-      #- "4318:4318"   # OTLP HTTP
-
-      - "16686:16686" # UI
-      #- "14250:14250" # Model.proto
-      #- "14268:14268" # Jaeger HTTP
-      #- "14269:14269" # Admin port
+      - "16686:16686"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - my_bridge_network
 
   phoenix:
     image: arizephoenix/phoenix:latest
     ports:
-      #- "4317:4317"
-      - "6006:6006"    # Phoenix UI
+      - "6006:6006"
     environment:
-      - PHOENIX_AUTH_ENABLED=false  # Disable auth for local development
-      - PHOENIX_OTLP_ENDPOINT=jaeger:4317  # Connect to Jaeger OTLP endpoint
-      - PHOENIX_TRACE_ENABLED=true         # Enable tracing
+      - PHOENIX_AUTH_ENABLED=false
+      - PHOENIX_OTLP_ENDPOINT=jaeger:4317
+      - PHOENIX_TRACE_ENABLED=true
     depends_on:
       - jaeger
+    networks:
+      - my_bridge_network
 
-  postgres:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=hray
-      - POSTGRES_USER=postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount the init script
-    command: ["postgres"]  # Simplified command as initialization is handled by docker-entrypoint-initdb.d
-    depends_on:
-      - jaeger
-
-volumes:
-  postgres_data:
-    driver: local
+networks:
+  my_bridge_network:
+    driver: bridge
