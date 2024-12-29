@@ -49,7 +49,13 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
         setIsLoading(false);
       }
     }
-    fetchData();
+    const interval = setInterval(() => {
+      setData("🤔" + ".".repeat((Date.now() / 500) % 4) + " !");
+    }, 500);
+
+    fetchData().finally(() => {
+      clearInterval(interval);
+    });
   }, [question]);
 
   return (
