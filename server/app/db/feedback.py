@@ -1,6 +1,10 @@
 import os
 from datetime import datetime
 
+from logger.log import get_logger
+
+logger = get_logger(__name__)
+
 from sqlalchemy import (Boolean, Column, DateTime, Integer, String,
                         create_engine)
 from sqlalchemy.ext.declarative import declarative_base
@@ -19,6 +23,7 @@ class Feedback(Base):
 
 def get_db():
     DATABASE_URL = f"postgresql://{os.getenv('POSTGRES_USER', 'postgres')}:{os.getenv('POSTGRES_PASSWORD', 'root')}@{os.getenv('POSTGRES_HOST', 'postgres')}/{os.getenv('POSTGRES_DB', 'hray')}"
+    logger.debug(f"DATABASE_URL: {DATABASE_URL}")
     engine = create_engine(DATABASE_URL)
     SessionLocal = sessionmaker(bind=engine)
     return SessionLocal()

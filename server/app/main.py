@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import os
 
 import uvicorn
@@ -16,6 +17,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 load_dotenv()
 # Create logger instance for this module
 logger = get_logger(__name__)
+
+# Configure logging at the application startup
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Initialize the unified tracer at application startup
 initialize_tracer(
