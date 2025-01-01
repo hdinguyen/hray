@@ -2,6 +2,7 @@ import os
 
 import dspy
 from dotenv import load_dotenv
+from llm.models import groq
 
 dspy.settings.experimental = True
 
@@ -13,7 +14,7 @@ class SummaryAgent(dspy.Module):
     """
     def __init__(self, lm = None):
         if lm is None:
-            lm = dspy.LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
+            lm = groq
         self.lm = lm
         self.react = dspy.ChainOfThought(
             "question, information -> answer"

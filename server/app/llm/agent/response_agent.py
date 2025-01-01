@@ -4,6 +4,7 @@ from typing import Optional
 import dspy
 from dotenv import load_dotenv
 from dspy import InputField, OutputField, Signature
+from llm.models import groq
 
 dspy.settings.experimental = True
 
@@ -22,7 +23,7 @@ class LanguageSignature(Signature):
 class ResponseAgent(dspy.Module):
     def __init__(self, lm = None):
         if lm is None:
-            lm = dspy.LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
+            lm = groq
         self.lm = lm
         self.cot = dspy.ChainOfThought(LanguageSignature)
         self.responder = dspy.ChainOfThought(ResponseSignature)

@@ -4,7 +4,8 @@ from typing import List, Optional
 import dspy
 from dotenv import load_dotenv
 from dspy import InputField, OutputField, Signature
-from llm.tool.search_tool import brave_search_tool
+from llm.models import groq
+from llm.tool.search_tool import brave_search_tool, google_search_tool
 from pydantic import BaseModel, Field
 
 dspy.settings.experimental = True
@@ -17,11 +18,11 @@ class AggregateAgent(dspy.Module):
     """
     def __init__(self, lm = None):
         if lm is None:
-            lm = dspy.LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
+            lm = groq
         self.lm = lm
         self.react = dspy.ReAct(
             "question -> information",
-            tools=[brave_search_tool]
+            tools=[brave_search_tool, google_search_tool]
         )
 
     def __call__(self, query: str):
