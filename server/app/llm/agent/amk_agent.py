@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from dspy import LM, ChainOfThought, configure, settings
-from llm.models import groq
+from llm.models import llm
 from opentelemetry import trace
 
 load_dotenv()
@@ -56,12 +56,12 @@ class AmkAgent():
                 "context": context
             })
 
-            configure(lm=groq)
+            configure(lm=llm)
             try:
                 result = self.parser(msg=msg, context=context)
                 span.set_attributes({
                     "result": str(result),
-                    "llm_history":str(groq.history[-1]["messages"])
+                    "llm_history":str(llm.history[-1]["messages"])
                 })
                 return result
             except Exception as e:

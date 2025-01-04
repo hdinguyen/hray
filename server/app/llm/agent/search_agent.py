@@ -3,7 +3,7 @@ from typing import Optional
 
 import dspy
 from dotenv import load_dotenv
-from llm.models import groq
+from llm.models import llm
 from llm.tool.search_tool import brave_search
 
 dspy.settings.experimental = True
@@ -13,7 +13,7 @@ load_dotenv()
 class SearchReact(dspy.Module):
     def __init__(self, lm = None):
         if lm is None:
-            lm = groq
+            lm = llm
         self.lm = lm
         self.react = dspy.ReAct(
             "question, purpose -> answer",

@@ -1,6 +1,7 @@
-import { ActionPanel, Detail, LaunchProps, Action, getPreferenceValues, showToast } from "@raycast/api";
+import { ActionPanel, LaunchProps, getPreferenceValues, showToast } from "@raycast/api";
 import { useState, useEffect } from "react";
-import fetch, { HeadersInit } from "node-fetch";
+import axios from "axios";
+import { QuestionDetail } from "./components/QuestionDetail";
 
 interface CommandArguments {
   question: string;
@@ -19,15 +20,15 @@ interface RequestBody {
 
 function makeRequest(endpoint: string, method: string = "GET", body?: RequestBody) {
   const { host, apiKey } = getPreferenceValues<Preferences>();
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    "X-API-Key": apiKey || "M3rryChr!stm@s",
-  };
-
-  return fetch(`${host}${endpoint}`, {
+  
+  return axios({
+    url: `${host}${endpoint}`,
     method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
+    data: body,
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey || "M3rryChr!stm@s",
+    }
   });
 }
 
@@ -40,9 +41,8 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
     async function fetchData() {
       try {
         const response = await makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
-        const result = await response.text();
-        const formattedResult = result.replace(/^"|"$/g, "").replace(/\\n/g, "\n");
-        console.log(result);
+        const formattedResult = response.data.replace(/^"|"$/g, "").replace(/\\n/g, "\n");
+        console.log(response.data);
         console.log(formattedResult);
         setData(formattedResult);
       } finally {
@@ -58,43 +58,33 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
     });
   }, [question]);
 
+  const handleHelpful = async () => {
+    await makeRequest("/llm/feedback", "POST", { helpful: true, question, response: data });
+    await showToast({ title: "Noted to learn" });
+  };
+
+  const handleNotHelpful = async () => {
+    await makeRequest("/llm/feedback", "POST", { helpful: false, question, response: data });
+    await showToast({ title: "Noted to learn" });
+  };
+
+  const handleClose = () => {
+    makeRequest("/llm/feedback", "POST", { helpful: null, question, response: data });
+  };
+
+  const handleEdit = () => {
+    makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
+  };
+
   return (
-    <Detail
-      markdown={data}
+    <QuestionDetail
+      data={data}
       isLoading={isLoading}
-      navigationTitle={question}
-      actions={
-        <ActionPanel>
-          <Action
-            title="👍 Helpful"
-            onAction={async () => {
-              await makeRequest("/llm/feedback", "POST", { helpful: true, question, response: data });
-              await showToast({ title: "Noted to learn" });
-            }}
-          />
-          <Action
-            title="👎 Not Helpful"
-            onAction={async () => {
-              await makeRequest("/llm/feedback", "POST", { helpful: false, question, response: data });
-              await showToast({ title: "Noted to learn" });
-            }}
-          />
-          <Action.OpenInBrowser
-            title="Close Without Feedback"
-            url="raycast://pop"
-            onOpen={() => {
-              makeRequest("/llm/feedback", "POST", { helpful: null, question, response: data });
-            }}
-          />
-          <Action.OpenInBrowser
-            title="Edit Question"
-            url="raycast://pop"
-            onOpen={() => {
-              makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
-            }}
-          />
-        </ActionPanel>
-      }
+      question={question}
+      onHelpful={handleHelpful}
+      onNotHelpful={handleNotHelpful}
+      onClose={handleClose}
+      onEdit={handleEdit}
     />
   );
 }

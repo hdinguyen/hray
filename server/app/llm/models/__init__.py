@@ -1,3 +1,3 @@
-from .llama_cpp import groq, llama_cpp
+from .llama_cpp import llm
 
-__all__ = ['groq', 'llama_cpp']
+__all__ = ['llm']

@@ -4,7 +4,7 @@ from typing import List, Optional
 import dspy
 from dotenv import load_dotenv
 from dspy import InputField, OutputField, Signature
-from llm.models import groq
+from llm.models import llm
 from llm.tool.search_tool import brave_search_tool, google_search_tool
 from pydantic import BaseModel, Field
 
@@ -18,7 +18,7 @@ class AggregateAgent(dspy.Module):
     """
     def __init__(self, lm = None):
         if lm is None:
-            lm = groq
+            lm = llm
         self.lm = lm
         self.react = dspy.ReAct(
             "question -> information",
