@@ -1,0 +1,53 @@
+{
+  "predictor": {
+    "lm": null,
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "question": "What is the capital of France?",
+        "agent_name": "web_search"
+      },
+      {
+        "augmented": true,
+        "question": "Translate to vietnamese: How is your holidays trip?",
+        "agent_name": "translate_agent"
+      },
+      {
+        "augmented": true,
+        "question": "Help me to summary the content from the clipboard",
+        "agent_name": "summary_agent"
+      },
+      {
+        "augmented": true,
+        "question": "lpgkfdaspdsagfjdsriag jrioa fkdosprfkjewq fdaskpfwqeo",
+        "agent_name": "lack_context"
+      },
+      {
+        "question": "Hello, how are you?",
+        "agent_name": "greeting_agent"
+      }
+    ],
+    "signature": {
+      "instructions": "Given the fields `question`, produce the fields `agent_name`.",
+      "fields": [
+        {
+          "prefix": "Question:",
+          "description": "Original question from user"
+        },
+        {
+          "prefix": "Agent Name:",
+          "description": "This is the agent name that must be used for the next step, could be lack_context if the user's question is not clear or not related to the context"
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12.7",
+      "dspy": "2.6.0rc6",
+      "cloudpickle": "3.1.0"
+    }
+  }
+}

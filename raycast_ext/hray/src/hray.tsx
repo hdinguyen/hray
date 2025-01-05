@@ -1,7 +1,7 @@
 import { ActionPanel, LaunchProps, getPreferenceValues, showToast } from "@raycast/api";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { QuestionDetail } from "./components/QuestionDetail";
+import { AnswerDisplay } from "./components/AnswerDisplay";
 
 interface CommandArguments {
   question: string;
@@ -18,9 +18,41 @@ interface RequestBody {
   response?: string;
 }
 
+interface ApiResponse {
+  status: string;
+  display: string;
+  data: string;
+}
+
+type ScreenProps = {
+  data: string;
+  isLoading: boolean;
+  question: string;
+  onHelpful?: () => Promise<void>;
+  onNotHelpful?: () => Promise<void>;
+  onClose?: () => void;
+  onEdit?: () => void;
+  onSubmit?: (question: string) => void;
+};
+
+const AnswerDisplayWrapper = (props: ScreenProps) => (
+  <AnswerDisplay
+    data={props.data}
+    isLoading={props.isLoading}
+    question={props.question}
+    onHelpful={props.onHelpful || (() => Promise.resolve())}
+    onNotHelpful={props.onNotHelpful || (() => Promise.resolve())}
+    onClose={props.onClose || (() => {})}
+    onEdit={props.onEdit || (() => {})}
+    onSubmit={props.onSubmit || (() => {})}
+  />
+);
+
 function makeRequest(endpoint: string, method: string = "GET", body?: RequestBody) {
   const { host, apiKey } = getPreferenceValues<Preferences>();
-  
+
+  console.log(host, apiKey);
+
   return axios({
     url: `${host}${endpoint}`,
     method,
@@ -32,30 +64,33 @@ function makeRequest(endpoint: string, method: string = "GET", body?: RequestBod
   });
 }
 
+const SCREEN_COMPONENTS: Record<string, React.ComponentType<ScreenProps>> = {
+  'lack_context': AnswerDisplayWrapper,
+  'default': AnswerDisplayWrapper,
+};
+
 export default function Command(props: LaunchProps<{ arguments: CommandArguments }>) {
   const { question } = props.arguments;
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState("");
+  const [displayType, setDisplayType] = useState<string>("loading");
 
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
-        const formattedResult = response.data.replace(/^"|"$/g, "").replace(/\\n/g, "\n");
+        const formattedResult = response.data as ApiResponse;
         console.log(response.data);
         console.log(formattedResult);
-        setData(formattedResult);
+        
+        setDisplayType(formattedResult.display || "default");
+        setData(formattedResult.data);
       } finally {
         setIsLoading(false);
       }
     }
-    const interval = setInterval(() => {
-      setData("🤔" + ".".repeat((Date.now() / 500) % 4) + " !");
-    }, 500);
 
-    fetchData().finally(() => {
-      clearInterval(interval);
-    });
+    fetchData();
   }, [question]);
 
   const handleHelpful = async () => {
@@ -76,15 +111,36 @@ export default function Command(props: LaunchProps<{ arguments: CommandArguments
     makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(question)}`);
   };
 
-  return (
-    <QuestionDetail
-      data={data}
-      isLoading={isLoading}
-      question={question}
-      onHelpful={handleHelpful}
-      onNotHelpful={handleNotHelpful}
-      onClose={handleClose}
-      onEdit={handleEdit}
-    />
-  );
+  const handleRetry = async (newQuestion: string) => {
+    console.log("handleRetry", newQuestion);
+    setIsLoading(true);
+    setDisplayType("default");
+    try {
+      const response = await makeRequest(`/llm/quick_reply?msg=${encodeURIComponent(newQuestion)}`);
+      const formattedResult = response.data as ApiResponse;
+      setDisplayType(formattedResult.display || "default");
+      setData(formattedResult.data);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const ScreenComponent = SCREEN_COMPONENTS[displayType] || SCREEN_COMPONENTS.default;
+  const screenProps: ScreenProps = {
+    data,
+    isLoading,
+    question,
+    ...(displayType === 'lack_context' 
+      ? { onSubmit: handleRetry }
+      : {
+          onSubmit: handleRetry,
+          onHelpful: handleHelpful,
+          onNotHelpful: handleNotHelpful,
+          onClose: handleClose,
+          onEdit: handleEdit,
+        }
+    ),
+  };
+
+  return <ScreenComponent {...screenProps} />;
 }

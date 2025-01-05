@@ -1,6 +1,6 @@
 import dspy
 from llm.agent.aggregate_agent import AggregateAgent
-from llm.agent.response_agent import ResponseAgent
+from llm.agent.routing_agent import RoutingAgent
 from llm.agent.search_agent import SearchReact
 from llm.agent.summary_agent import SummaryAgent
 from llm.models import llm
@@ -10,13 +10,11 @@ logger = get_logger(__name__)
 class QuickReplyPipeline(dspy.Module):
     def __init__(self, *modules):
         self.modules = modules
-        self.aggregate_agent = AggregateAgent(lm=llm)
-        self.search_rag = SearchReact(lm=llm)
-        self.response_agent = ResponseAgent(lm=llm)
-        self.summary_agent = SummaryAgent(lm=llm)
+        self.routing_agent = RoutingAgent(lm=llm)
 
     def forward(self, query: str):
-        aggreage_information =self.aggregate_agent(query)
-        summary_information = self.summary_agent(query, aggreage_information.information)
-        return self.response_agent(question=query, reality_information=summary_information.answer)
+        agent_name = self.routing_agent(question=query)
+        if agent_name == "web_search":
+            return {"status": "success", "display": "result", "data": "web_search"}
+        return {"status": "success", "display": "lack_context", "data": "I don't have enough context to answer your question, please provide more information"}
 

@@ -22,7 +22,7 @@
           "name": "question",
           "placeholder": "Question",
           "type": "text",
-          "required": true,
+          "required": false,
           "maximumWidth": "full"
         }
       ]

@@ -2,6 +2,9 @@ import os
 
 from dotenv import load_dotenv
 from dspy import LM
+from logger.log import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
@@ -14,3 +17,5 @@ llm = LM(
 llm_default = os.getenv('DEFAULT_MODEL', "LLAMA_CPP")
 if llm_default == "GROQ":
     llm = LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
+
+logger.info(f"Using model: {llm.model}")

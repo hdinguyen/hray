@@ -180,3 +180,5 @@ yarn-error.log*
 dist/
 
 **/tmp
+**/optimise/**/*.json
+**/optimise/**/*.pkl

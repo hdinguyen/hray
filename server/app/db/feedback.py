@@ -45,3 +45,7 @@ def create_feedback(feedback_data: dict):
         raise e
     finally:
         db.close()
+
+def get_feedback():
+    db = get_db()
+    return db.query(Feedback).order_by(Feedback.created_at.desc()).limit(5).all()
