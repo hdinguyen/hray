@@ -1,3 +1,0 @@
-# Ignore all JSON and PKL files in optimise folder and its subdirectories
-**/optimise/**/*.json
-**/optimise/**/*.pkl
