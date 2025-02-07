@@ -1,0 +1,93 @@
+#! /bin/bash
+
+CONFIG_DIR="$HOME/.config/hray"
+CONFIG_FILE="$CONFIG_DIR/config.ini"
+
+# Define the default profile
+DEFAULT_PROFILE="LOCAL"
+
+# Function to display help
+show_help() {
+    echo "Usage: [Your input] | hray"
+    echo "Options:"
+    echo "  --help            Show this help message"
+    echo "  --set <key> <value>  Set a configuration key to a specified value"
+    echo "  --profile <profile>  Switch to a different profile"
+}
+
+# Check if --help is passed
+if [[ "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+# Function to switch profiles
+switch_profile() {
+    local profile=$1
+    if [ -z "$profile" ]; then
+        echo "Error: Profile name must be provided."
+        exit 1
+    fi
+    if [ ! -f "$CONFIG_DIR/config_$profile.ini" ]; then
+        echo "Error: Profile '$profile' does not exist."
+        exit 1
+    fi
+    ln -sf "$CONFIG_DIR/config_$profile.ini" "$CONFIG_FILE"
+    echo "Switched to profile '$profile'."
+}
+
+# Check if --profile is passed
+if [[ "$1" == "--profile" ]]; then
+    switch_profile "$2"
+    exit 0
+fi
+
+# Create config directory and file if they don't exist
+if [ ! -d "$CONFIG_DIR" ]; then
+    mkdir -p "$CONFIG_DIR"
+fi
+
+# Create default profile if no config file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "[DEFAULT]" > "$CONFIG_DIR/config_$DEFAULT_PROFILE.ini"
+    echo "API_KEY=your_api_key_here" >> "$CONFIG_DIR/config_$DEFAULT_PROFILE.ini"
+    echo "BASE_URL=your_base_url_here" >> "$CONFIG_DIR/config_$DEFAULT_PROFILE.ini"
+    ln -sf "$CONFIG_DIR/config_$DEFAULT_PROFILE.ini" "$CONFIG_FILE"
+    echo "Configuration file created for profile '$DEFAULT_PROFILE'. Please update it with your API details."
+    exit 1
+fi
+
+# Update configuration key-value pair
+if [[ "$1" == "--set" ]]; then
+    if [ -z "$2" ] || [ -z "$3" ]; then
+        echo "Error: Key and value must be provided."
+        exit 1
+    fi
+    key=$2
+    value=$3
+    if grep -q "^$key=" "$CONFIG_FILE"; then
+        sed -i '' "s/^$key=.*/$key=$value/" "$CONFIG_FILE"
+    else
+        echo "$key=$value" >> "$CONFIG_FILE"
+    fi
+    echo "$key updated to $value."
+    exit 0
+fi
+
+# Read configuration
+API_KEY=$(awk -F "=" '/API_KEY/ {print $2}' "$CONFIG_FILE")
+BASE_URL=$(awk -F "=" '/BASE_URL/ {print $2}' "$CONFIG_FILE")
+
+# Read input from pipe
+if [ -t 0 ]; then
+    echo "No input provided. Please pipe your input to hray."
+    exit 1
+fi
+
+INPUT=$(cat)
+
+# Call the REST API
+response=$(curl -s -X POST "$BASE_URL" -H "Authorization: Bearer $API_KEY" -d "input=$INPUT")
+
+# Output the response
+echo "$response"

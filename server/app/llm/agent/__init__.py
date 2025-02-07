@@ -1,20 +1,16 @@
-from abc import ABC, abstractmethod
-
 from dspy import Module
-from pydantic import field_validator
 
 
-class BaseModule(Module):
+class BaseAgent(Module):
+    @property
+    def name(self):
+        return self._name
 
-    agent_name: str
+    @name.setter
+    def name(self, value):
+        self._name = value
 
-    @field_validator('agent_name')
-    def validate_agent_name(cls, value):
-        if not value.strip():
-            raise ValueError("agent_name is required and must be a non-empty string.")
-        return value
-
-    @abstractmethod
-    def forward(self, *args, **kwargs):
-        """Method that must be implemented by subclasses."""
-        pass
+    def __init__(self, **data):
+        if not data.get('name'):
+            raise ValueError("name is not set")
+        self.name = data.get('name')

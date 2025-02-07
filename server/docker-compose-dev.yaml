@@ -2,18 +2,7 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
-      # - "6831:6831/udp"  # Accept jaeger.thrift in compact Thrift protocol
-      # - "6832:6832/udp"  # Accept jaeger.thrift in binary Thrift protocol
-      # - "5778:5778"      # Serve configs
-      # - "16686:16686"    # Serve frontend
-      # - "4317:4317"      # OTLP gRPC
-      # - "4318:4318"      # OTLP HTTP
-      # - "14250:14250"    # Accept model.proto
-      # - "14268:14268"    # Accept jaeger.thrift directly from clients
-      # - "14269:14269"    # Admin port
-      # OTLP gRPC and HTTP ports
-      # - "4317:4317"   # OTLP gRPC (primary protocol for OTLPSpanExporter)
-      - "4318:4318"   # OTLP HTTP
+      - "4318:4318" # OTLP HTTP
 
       # Standard Jaeger ports (can keep for compatibility)
       - "16686:16686" # UI
@@ -21,18 +10,17 @@ services:
       - "14268:14268" # Jaeger HTTP
       - "14269:14269" # Admin port
     environment:
-      #- COLLECTOR_ZIPKIN_HOST_PORT=:9411
       - COLLECTOR_OTLP_ENABLED=true
 
   phoenix:
     image: arizephoenix/phoenix:latest
     ports:
       - "4317:4317"
-      - "6006:6006"    # Phoenix UI
+      - "6006:6006" # Phoenix UI
     environment:
-      - PHOENIX_AUTH_ENABLED=false  # Disable auth for local development
-      - PHOENIX_OTLP_ENDPOINT=jaeger:4317  # Connect to Jaeger OTLP endpoint
-      - PHOENIX_TRACE_ENABLED=true         # Enable tracing
+      - PHOENIX_AUTH_ENABLED=false # Disable auth for local development
+      - PHOENIX_OTLP_ENDPOINT=jaeger:4317 # Connect to Jaeger OTLP endpoint
+      - PHOENIX_TRACE_ENABLED=true # Enable tracing
     depends_on:
       - jaeger
 
@@ -46,11 +34,40 @@ services:
       - POSTGRES_USER=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount the init script
-    command: ["postgres"]  # Simplified command as initialization is handled by docker-entrypoint-initdb.d
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Mount the init script
+    command: [ "postgres" ] # Simplified command as initialization is handled by docker-entrypoint-initdb.d
     depends_on:
       - jaeger
 
+  neo4j:
+    image: neo4j:latest
+    environment:
+      - NEO4J_AUTH=neo4j/password # Set your username and password
+    ports:
+      - 7474:7474 # HTTP interface (Neo4j Browser)
+      - 7687:7687 # Bolt protocol (used for client connections)
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_conf:/conf
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000" # REST API access
+    environment:
+      - CHROMA_DB_PATH=/data # Path for ChromaDB storage
+    volumes:
+      - chroma_data:/data # Persistent volume for ChromaDB data
+
 volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_conf:
+    driver: local
   postgres_data:
+    driver: local
+  chroma_data:
     driver: local

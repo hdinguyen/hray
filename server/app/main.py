@@ -12,6 +12,7 @@ from logger import get_logger
 from logger.unified_tracer import initialize_tracer
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from routers.chitchat import router as chat_router
+from routers.translation import router as translation_router
 from starlette.middleware.base import BaseHTTPMiddleware
 
 load_dotenv()
@@ -94,8 +95,9 @@ async def health_check():
     return {"status": "healthy", "timestamp": str(datetime.datetime.now())}
 
 app.include_router(chat_router)
+app.include_router(translation_router)
 
 logger.info("FastAPI instrumentation completed")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8008)

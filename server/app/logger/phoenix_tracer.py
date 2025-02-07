@@ -1,5 +1,4 @@
 
-from llm.tool.search_tool import SearchResult
 from openinference.instrumentation.dspy import DSPyInstrumentor
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import \

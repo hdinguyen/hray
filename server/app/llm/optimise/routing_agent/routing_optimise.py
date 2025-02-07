@@ -27,9 +27,12 @@ trainset = [
     Example(question="Hello, how are you?", agent_name="greeting_agent").with_inputs("question")
 ]
 
-agent = RoutingAgent(lm=llm)
-
+agent = RoutingAgent(name='routing_agent',lm=llm, mode='training')
 compiled_prompt = teleprompt.compile(agent, trainset=trainset)
 
 path = os.getenv('OPTIMISE_PATH', "llm/optimise")
-compiled_prompt.save(f"{path}/{agent.agent_name}/full/", save_program=True)
+
+full_path = f"{path}/{agent.name}/full/"
+if not os.path.exists(full_path):
+    os.makedirs(full_path)
+compiled_prompt.save(full_path, save_program=True)
