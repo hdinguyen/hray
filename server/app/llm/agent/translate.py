@@ -2,10 +2,12 @@ from typing import List
 
 import dspy
 import nltk
-from llm.models import llm
-# from neo4j import GraphDatabase
+from llm.models import anthropic_llm, llm
 from llm.tool.vectordb import ChromaDBTool
+# from neo4j import GraphDatabase
+from logger.log import get_logger
 
+logger = get_logger(__name__)
 
 class VietnameseTerms:
     """Manager for Vietnamese terms and their meanings"""
@@ -17,17 +19,16 @@ class VietnameseTerms:
 
     def _initialize_default_terms(self):
         default_terms = [
-            {"term": "Đại ca", "meaning": "big brother", "category": "honorific"},
-            {"term": "Đại hoàng huynh", "meaning": "eldest royal brother", "category": "honorific"},
-            {"term": "Em", "meaning": "younger sibling", "category": "honorific"},
-            {"term": "Tiểu đệ", "meaning": "younger brother", "category": "honorific"},
+            {"category":"term","phrase": "Đại ca", "meaning": "big brother", "added_by": "auto"},
+            {"category":"term","phrase": "Đại hoàng huynh", "meaning": "eldest royal brother", "added_by": "auto"},
+            {"category":"term","phrase": "Tiểu đệ", "meaning": "younger brother", "added_by": "auto"},
             # Add more default terms as needed
         ]
         # Add terms to the database
         for term_data in default_terms:
             self.db.add_documents(
                 documents=[term_data["term"]],
-                metadatas=[{"meaning": term_data["meaning"], "category": term_data["category"]}],
+                metadatas=[{"meaning": term_data["meaning"]}],
                 ids=[term_data["term"]]
             )
     def query(self, query_text: str, n_results: int = 3):
@@ -37,38 +38,17 @@ class VietnameseTerms:
             context.append(f"{term}: {metadata['meaning']} ({metadata['category']})")
         return "\n".join(context)
 
-    # def add_term(self, term: str, meaning: str, category: str = "honorific"):
-    #     """Add a new term to the database"""
-    #     self.db.add_document(
-    #         document=meaning,
-    #         metadata={"term": term, "category": category},
-    #         id=term
-    #     )
+    def add_terms(self, term: str, meaning: str, added_by: str):
+        self.db.add_documents(
+            documents=[term],
+            metadatas=[{"meaning": meaning, "added_by": added_by}],
+            ids=[term]
+        )
 
-    # def get_meaning(self, term: str) -> str:
-    #     """Get the meaning of a Vietnamese term"""
-    #     result = self.db.search(term, n_results=1)
-    #     if result and result[0]:
-    #         return result[0]
-    #     return term
-
-    # def get_all_terms(self, category: str = None):
-    #     """Get all terms, optionally filtered by category"""
-    #     # Implement based on your ChromaDBTool's capabilities
-    #     return self.db.get_all_documents(filter={"category": category} if category else None)
-
-    # def correct_translation(self, text: str) -> str:
-    #     """Correct any Vietnamese terms in the text with their proper meanings"""
-    #     corrected = text
-    #     all_terms = self.get_all_terms()
-    #     for term_data in all_terms:
-    #         term = term_data["metadata"]["term"]
-    #         meaning = term_data["document"]
-    #         # Replace incorrect translations with correct ones
-    #         corrected = corrected.replace(f"{term} (Uncle)", f"{term} ({meaning})")
-    #         corrected = corrected.replace(f"{term} (uncle)", f"{term} ({meaning})")
-    #     return corrected
-
+class PharseInterpolate(dspy.Signature):
+    """Interpolate text with Vietnamese term in English"""
+    term: str = dspy.InputField(desc="Retrieved relevant Vietnamese terms and meanings")
+    interpolated_text: str = dspy.OutputField(desc="Meaning of the term in English text")
 
 class ExtractSignature(dspy.Signature):
     """Extract information from text with multiple knowledge support"""
@@ -77,9 +57,9 @@ class ExtractSignature(dspy.Signature):
     sentence: str = dspy.InputField(desc="Text chunk to be processed")
     new_characters: List[str] = dspy.OutputField(desc="Extracted character names with proper honorifics if any")
     new_terms: List[str] = dspy.OutputField(desc="Extracted new guessed terms if any")
-    time: str = dspy.OutputField(desc="Extracted time if any else indentify the subsequent moment of the input text versus the added context")
-    location: str = dspy.OutputField(desc="Extracted location if any")
-    context_summary: str = dspy.OutputField(desc="Summary of the context from the input text")
+    # time: str = dspy.OutputField(desc="Extracted time if any else indentify the subsequent moment of the input text versus the added context")
+    # location: str = dspy.OutputField(desc="Extracted location if any")
+    # context_summary: str = dspy.OutputField(desc="Summary of the context from the input text")
 
 class TranslationSignature(dspy.Signature):
     """Translate text from source language to target language with multiple knowledge support"""
@@ -95,7 +75,7 @@ class RetouchSignature(dspy.Signature):
     retouched_text: str = dspy.OutputField(desc="Retouched text")
 
 class Translator(dspy.Module):
-    def __init__(self):
+    def __init__(self, lm: dspy.LM):
         super().__init__()
         # self.driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "password"))
         self.storage_db = ChromaDBTool("novel1")  # For storing results
@@ -105,11 +85,16 @@ class Translator(dspy.Module):
         # self.retriever = MultiRetriever(self.viet_terms_db, self.knowledge_db)
 
         # Initialize predictor
-        self.lm = llm
+        if lm is None:
+            self.lm = llm
+        else:
+            self.lm = lm
         self.predictor = dspy.Predict(ExtractSignature)
         self.predictor.set_lm(self.lm)
         self.translator = dspy.Predict(TranslationSignature)
         self.translator.set_lm(self.lm)
+        self.pharse_interpolator = dspy.Predict(PharseInterpolate)
+        self.pharse_interpolator.set_lm(self.lm)
 
         try:
             nltk.data.find('tokenizers/punkt')
@@ -147,6 +132,7 @@ class Translator(dspy.Module):
                 terms=relevant_terms,
                 relevant_data=relevant_context
             ).toDict()
+            logger.info(f"Prompt: {dspy.inspect_history(n=1)}")
             tmp_memory.progress = float((i+1) / total_chunks * 100)
             tmp_memory.memory.append(result_text)
             i += 1
@@ -154,17 +140,17 @@ class Translator(dspy.Module):
 
     def extract_information(self, chunk: str, terms_context: str, knowledge_context: str):
         """Extract information using both retrieved contexts"""
-        result = self.predictor(
+        predictor = self.predictor(
             viet_terms_context=terms_context,
             knowledge_context=knowledge_context,
             sentence=chunk
-        ).toDict()
+        )
+        result = predictor.toDict()
+        logger.info(f"Prompt: {dspy.inspect_history(n=1)}")
 
         return {
-            "character": result['character_name'],
-            "time": result['time'],
-            "location": result['location'],
-            "action": result['action'],
+            "character": result['new_characters'],
+            "new_terms": result['new_terms'],
             "chunk": chunk,
             "used_terms": terms_context,
             "used_knowledge": knowledge_context

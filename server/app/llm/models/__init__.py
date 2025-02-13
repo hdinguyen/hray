@@ -1,3 +1,3 @@
-from .llama_cpp import llm
+from .llama_cpp import anthropic_llm, llm
 
-__all__ = ['llm']
+__all__ = ['llm', 'anthropic_llm']

@@ -19,3 +19,8 @@ if llm_default == "GROQ":
     llm = LM(f"{os.getenv('GROQ_MODEL')}", api_key=f"{os.getenv('GROQ_API_KEY')}")
 
 logger.info(f"Using model: {llm.model}")
+
+anthropic_llm = LM(
+    model="anthropic/claude-3-sonnet-20240229",
+    api_key=os.getenv('ANTHROPIC_API_KEY')
+)

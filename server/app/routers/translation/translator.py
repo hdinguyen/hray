@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import HTTPException, Request
 from llm.agent.translate import Translator
+from llm.models import anthropic_llm, llm
 from logger.log import get_logger
 from pydantic import BaseModel
 
@@ -15,7 +16,7 @@ from . import router
 def test():
     return {"status": "success", "data": "test"}
 
-t = Translator()
+t = Translator(lm=llm)
 
 class TranslationRequest(BaseModel):
     text: str
@@ -29,6 +30,23 @@ class TempMemory:
         self.new_terms = []
 
 tmp_memory = TempMemory()
+
+@router.get("/translate/model")
+def get_llm():
+    return {"status": "success", "data": t.lm.model}
+
+class ModelRequest(BaseModel):
+    model: str
+
+@router.post("/translate/model/set")
+def set_llm(request: ModelRequest):
+    global t
+    if request.model == "llm":
+        t = Translator(lm=llm)
+    elif request.model == "anthropic":
+        t = Translator(lm=anthropic_llm)
+    return {"status": "success", "data": t.lm.model}
+
 
 @router.post("/translate")
 async def translate(request: TranslationRequest):
